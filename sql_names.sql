@@ -68,7 +68,7 @@ ORDER BY total_registered DESC;
 
 SELECT name, gender, SUM(num_registered) AS total_registered
 FROM names
-WHERE year >= 2000 AND year <=2009
+WHERE year BETWEEN 2000 AND 2009
 GROUP BY name, gender
 ORDER BY total_registered DESC;
 
@@ -115,14 +115,53 @@ ORDER BY total_registered DESC;
 
 -- 14. What percentage of names are "unisex" - that is what percentage of names have been used both for boys and for girls?
 
+SELECT ROUND(SUM(sub_q.name_number)/(SELECT COUNT(DISTINCT name) FROM names)*100, 4) AS unisex_pct
+FROM
+	(SELECT name, COUNT(DISTINCT gender) AS gender_number, COUNT(DISTINCT name) AS name_number
+	 FROM names
+	 GROUP by name) AS sub_q
+WHERE sub_q.gender_number = 2;
+
+-- 10.95 % of names are unisex
+
 -- 15. How many names have made an appearance in every single year since 1880?
+
+SELECT COUNT(sub_q.name) AS name_count
+FROM
+	(SELECT year, name, COUNT(DISTINCT(name))
+	 FROM names
+	 GROUP BY year, name) AS sub_q
+GROUP BY sub_q.name
+HAVING COUNT(sub_q.name) =  2018 - 1880 + 1;
+
+-- 921 names (not the best way to answer this)
 
 -- 16. How many names have only appeared in one year?
 
+SELECT COUNT(sub_q.name) AS name_count
+FROM
+	(SELECT year, name, COUNT(DISTINCT(name))
+	 FROM names
+	 GROUP BY year, name) AS sub_q
+GROUP BY sub_q.name
+HAVING COUNT(sub_q.name) =  1;
+
+-- 21123 (same as above, not the best way to answer this)
+
 -- 17. How many names only appeared in the 1950s?
+
+SELECT COUNT(sub_q.name) AS name_count
+FROM
+	(SELECT year, name, COUNT(DISTINCT(name))
+	 FROM names
+	 GROUP BY year, name) AS sub_q
+GROUP BY sub_q.year, sub_q.name
+HAVING year::text LIKE '195%' AND year::text NOT LIKE ALL(ARRAY['18%', '190%', '191%', '192%', '193%', '194%', '196%', '197%', '198%', '199%', '2%']);
+
+-- This can't be right
 
 -- 18. How many names made their first appearance in the 2010s?
 
--- 19. Find the names that have not be used in the longest.
+-- 19. Find the names that have not been used the longest.
 
 -- 20. Come up with a question that you would like to answer using this dataset. Then write a query to answer this question.
